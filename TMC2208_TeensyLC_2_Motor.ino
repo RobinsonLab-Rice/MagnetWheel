@@ -362,6 +362,7 @@ void loop() {
   drivers[0].run();
   drivers[1].run();
   if (frameTrigger)	{ // Return a value from the hall sensor, specifically the greatest magnitude measurement since the last trigger
+    frameTrigger = false;
     if (ZERO_FIELD - hallMin > hallMax - ZERO_FIELD)  {
       Serial.println(hallMin);
     }
@@ -371,14 +372,17 @@ void loop() {
 	  //Serial.println(lastHallRead);
     hallMin = hallMax = ZERO_FIELD;
   	if (waitForFrameTrigger)	{
-  	  frameTriggerDelay = true;
-  	  firstFrameTrigger = loopMillis;
+      waitForFrameTrigger = false;
+      frameTriggerDelay = true;
+      firstFrameTrigger = loopMillis;
+      Serial.println("Triggered");
   	}
   }
   if (frameTriggerDelay && loopMillis - firstFrameTrigger >= frameDelayMillis)	{
 	  frameTriggerDelay = false;
   	if (!drivers[selectedDriver].stepping) {
   	  drivers[selectedDriver].start();
+      Serial.println("Delay finished - starting spin");
   	}
   }
   if (Serial.available()) {
@@ -454,7 +458,8 @@ inline void parseMessage() {
     }
   }
   else if (message.startsWith("wait"))  {
-	waitForFrameTrigger = true;
+    waitForFrameTrigger = true;
+    Serial.println("Waiting for trigger...");
   }
   else if (message.startsWith("speed"))  {
     int ind = message.indexOf(':',5);
